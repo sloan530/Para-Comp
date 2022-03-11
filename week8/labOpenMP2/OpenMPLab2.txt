@@ -1,0 +1,17 @@
+a) one thread and a large value of n = 100000000
+
+almost_serial:	0.296114
+local:		0.296640
+reduction:	0.295494
+
+b) same n with a) with 2 - 64 threads
+
+		Thread 2	Thread 4	Thread 8	Thread 16	Thread 32	Thread 64
+trap1_mod:	0.294911	0.300369	0.296422	0.296757	0.296828	0.305381
+trap2a:	0.152380	0.086657	0.093140	0.092508	0.088489	0.080685
+trap2b:	0.150151	0.080372	0.080324	0.085332	0.082262	0.081915
+
+The elapsed time of all programs was similar when there was 1 thread. However, as thread count became 2, the elapesed time of trap2a and trap2b became half while the trap1_modified stayed similar to elapsed time when thread count was 1. As thread counts increased, the elapsed time for trap1_modified stayed similar to thread count 1.
+For the elapsed time of trap2a and trap2b became half again when thread count was 4. 
+After that, it stayed similar to the time when thread count was 4 no matter how many more threads were working.
+The performance of the trap2a and trap2b were similar but the performance of trap1_modified was like a serial program.
