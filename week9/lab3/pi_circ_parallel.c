@@ -15,10 +15,10 @@
 
 /* Serial function */
 void Get_args(char *argv[],
-              long long int *number_of_tosses_p);
+              long long int *number_of_tosses_p, int *thread_count);
 void Usage(char *prog_name);
 
-long long int Count_hits(long long int number_of_tosses);
+long long int Count_hits(long long int number_of_tosses, int thread_count);
 
 /*---------------------------------------------------------------------*/
 int main(int argc, char *argv[])
@@ -28,11 +28,11 @@ int main(int argc, char *argv[])
    long long int number_in_circle;
    long long int number_of_tosses;
 
-   if (argc != 2)
+   if (argc != 3)
       Usage(argv[0]);
-   Get_args(argv, &number_of_tosses);
+   Get_args(argv, &number_of_tosses, &thread_count);
 
-   number_in_circle = Count_hits(number_of_tosses);
+   number_in_circle = Count_hits(number_of_tosses, thread_count);
 
    pi_estimate = 4 * number_in_circle / ((double)number_of_tosses);
    printf("Estimated pi: %e\n", pi_estimate);
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
  * Return val:    number_in_circle
  */
 
-long long int Count_hits(long long int number_of_tosses)
+long long int Count_hits(long long int number_of_tosses, int thread_count)
 {
 
    long long int number_in_circle = 0;
