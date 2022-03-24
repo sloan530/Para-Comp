@@ -102,8 +102,10 @@ void Usage(char prog_name[] /* in */)
 
 void Get_args(
     char *argv[] /* in  */,
-    long long int *number_of_tosses_p /* out */)
+    long long int *number_of_tosses_p /* out */,
+    int thread_count)
 {
 
    *number_of_tosses_p = strtoll(argv[1], NULL, 10);
+   *thread_count = strtoi(argv[2], NULL, 10);
 } /* Get_args */
