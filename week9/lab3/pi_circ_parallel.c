@@ -59,8 +59,9 @@ long long int Count_hits(long long int number_of_tosses, int thread_count)
    double x, y, distance_squared;
    long long int toss;
 
-#pragma omp for num_thread(thread_count) reduction(+ \
-                                                   : number_in_circle)
+#pragma omp for num_thread(thread_count) \
+    reduction(+                          \
+              : number_in_circle)
    for (toss = 0; toss < number_of_tosses; toss++)
    {
       x = (double)rand_r(&seed) / RAND_MAX;
