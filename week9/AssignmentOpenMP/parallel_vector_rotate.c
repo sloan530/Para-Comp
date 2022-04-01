@@ -10,7 +10,7 @@
  * name of the data file that should be read and processed.
  *
  *  parallelize this program using pthreads.
- * How to compile: gcc -o serial serial_vector_rotate.c -lm
+ * How to compile: gcc -o parallel parallel_vector_rotate.c -fopenmp -lm
  * result for input1.txt:
  * Result = [-613.67, 28.55, -162.24]
  * result for input2.txt:
@@ -19,13 +19,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <omp.h>
 
 /* global variables */
 char* input_file_name = NULL;
 long num_vectors = 0;
 float* original_vectors = NULL;
 float* rotated_vectors = NULL;
-
+int num_threads;
 /*--------------------------------------------------------------------*/
 
 void processCommandLine(int argc, char* argv[]);
@@ -46,7 +47,7 @@ int main(int argc, char* argv[])
     float rotation_matrix[9];
     float angles[3];
     float result[3] = { 0.0f, 0.0f, 0.0f };
-    float temp[3] = { 0.0f, 0.0f, 0.0f };
+    
 
     /* check for command line argument */
 	processCommandLine(argc, argv);
@@ -65,26 +66,44 @@ int main(int argc, char* argv[])
        and compute the rotation transformation matrix */
     rotated_vectors = (float*)malloc(3*num_vectors*sizeof(float));
     computeRotationMatrix(angles, rotation_matrix);
-
+    
+    float start = omp_get_wtime();
 	/* START OF CODE TO BE PARALLELIZED */
-
+#   pragma omp parallel num_threads(num_threads)
+{
+    float my_result[3] = { 0.0f, 0.0f, 0.0f };
+    float temp[3] = { 0.0f, 0.0f, 0.0f };
+#   pragma omp for
     /* rotate all the vectors */
     for (v=0; v<num_vectors; v++)
         multMatrixVector(rotation_matrix, &(original_vectors[v*3]), &(rotated_vectors[v*3]));
-
+    
+#   pragma omp for
     /* add all the vectors */
     for (v=0; v<num_vectors; v++)
     {
-        addVectorVector(result, &(rotated_vectors[v*3]), temp);
-        result[0] = temp[0];
-        result[1] = temp[1];
-        result[2] = temp[2];
+        addVectorVector(my_result, &(rotated_vectors[v*3]), temp);
+        my_result[0] = temp[0];
+        my_result[1] = temp[1];
+        my_result[2] = temp[2];
+    }
+#   pragma omp critical
+    {
+    addVectorVector(my_result, result, temp);
+    result[0] = temp[0];
+    result[1] = temp[1];
+    result[2] = temp[2];
     }
 
+#   pragma omp single
+    printf("Number of threads: %d\n", omp_get_num_threads());
+}
 
 	/* END OF CODE TO BE PARALLELIZED */
-
+    float end = omp_get_wtime();
+    
     /* print results */
+    printf("Elapsed time = %f\n", end-start);
     printf("Result = [%0.2f, %0.2f, %0.2f]\n", result[0], result[1], result[2]);
 
     /* clean up dynamic memory */
@@ -99,15 +118,16 @@ int main(int argc, char* argv[])
 
 /* print command line usage message and abort program. */
 void usage(char* prog_name) {
-	fprintf(stderr, "usage: %s <fn>\n", prog_name);
+	fprintf(stderr, "usage: %s <fn> <number of threads> \n", prog_name);
 	fprintf(stderr, "   <fn> is name of the file containing the data to be processed\n");
 	exit(0);
 }
 
 /* interpret command lines and store in shared variables */
 void processCommandLine(int argc, char* argv[]) {
-	if (argc != 2) usage(argv[0]);
+	if (argc != 3) usage(argv[0]);
 	input_file_name = argv[1];
+	num_threads = atoi(argv[2]);
 }
 
 /* read the input data file */
